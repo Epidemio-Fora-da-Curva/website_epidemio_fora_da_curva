@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Maíra Rodrigues Duffeck | Kaique Alves</title>
+    <link>/authors/maira-rodrigues-duffeck/</link>
+      <atom:link href="/authors/maira-rodrigues-duffeck/index.xml" rel="self" type="application/rss+xml" />
+    <description>Maíra Rodrigues Duffeck</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>pt</language><lastBuildDate>Tue, 17 Mar 2020 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>img/map[gravatar:%!s(bool=false) shape:circle]</url>
+      <title>Maíra Rodrigues Duffeck</title>
+      <link>/authors/maira-rodrigues-duffeck/</link>
+    </image>
+    
+    <item>
+      <title>Modeling Yield Losses and Fungicide Profitability for Managing Fusarium Head Blight in Brazilian Spring Wheat</title>
+      <link>/publication/fhb_yield_loss/</link>
+      <pubDate>Tue, 17 Mar 2020 00:00:00 +0000</pubDate>
+      <guid>/publication/fhb_yield_loss/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

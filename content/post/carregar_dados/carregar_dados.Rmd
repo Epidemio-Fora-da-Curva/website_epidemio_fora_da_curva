@@ -1,0 +1,74 @@
+---
+title: "Carregar Dados no RStudio"
+author: "Kaique alves"
+date: 2020-03-17T21:00:00-00:00
+output: html_document
+---
+
+
+Se você veio até aqui, você deve estar curioso pra saber como carregar os dados no `R` ou no `RStudio` para poder iniciar sua análise de dados.
+
+Não se preocupe! Neste post, eu irei demonstrar quatro maneiras simples que você pode utilizar para carregar dados de planilhas.
+
+# **Mãos à obra**
+## **Arquivo .txt**
+
+Utilize a função `read.table()`, a qual é uma função nativa do `R` para carregar dados que foram organizados ou gerados em um arquivo de texto ou bloco de notas. Normalmente esse tipo de arquivo possui extensão `.txt`.
+
+
+```{r}
+data = read.table(file = "data.txt", header = T)
+head(data)
+```
+
+Quando eu coloco `data = read...`  significa que eu estou atribuindo o banco de dados á um objeto `data.frame`. Dessa forma você pode chamar esse objeto nas operações subsequentes.
+
+A função `head()` mostra as seis primeiras linhas do `data.frame`  
+
+
+## **Arquivos MS Excel  (.xlsx e .xls)**
+
+Para carregar um arquivo Excel você primeiro precisa instalar o pacote `readxl`. Basta você copiar e colar `install.packages("readxl")` no seu console.
+
+Utilizando a função `read_excel` você pode carregar tanto arquivos `.xlsx` quanto `.xls`.
+
+```{r}
+library(readxl)
+
+data = read_excel("data.xlsx")
+head(data)
+```
+
+
+Para carregar uma planilha específica dentro do arquivo, basta adicionar o argumento `sheet = ` dentro da função, e após o sinal de igual digite o nome da planilha, por exemplo `read_excel("data.xlsx", sheet = "experimento_1")`
+
+
+## **Arquivo CSV**
+
+Para carregar um arquivo `.csv` você pode utilizar a função nativa `read.csv()`. O argumento `sep = ","` indica que o tipo de separador de colunas no arquivo é a vírgula
+
+```{r}
+data = read.csv(file = "data.csv", sep = ",")
+head(data)
+```
+
+
+
+## **Google planilhas**
+
+Particularmente, esse é meu método preferido de carregar os dados, justamente porque meus dados são todos armazenados em Google planilhas.
+
+Primeiramente é necessário instalar o pacote `gsheet`. Utilize o comando `install.packages("gsheet")`.
+
+posteriormente, vá na sua planilha google, clique no botão **Compartilhar** no canto superior direito. Clique em **Receber link compartilhável**. Assim você vai gerar um link. Copie o link e inserira na função
+`gsheet2tbl()`. Lembre-se de primento carregar o pacote `gsheet` 
+
+```{r}
+library(gsheet)
+
+gsheet2tbl("https://docs.google.com/spreadsheets/d/1sQPemg1lSYremWh4xe83YUDeDJiRh_M3WqqHiOnfVow/edit?usp=sharing")
+
+
+```
+
+

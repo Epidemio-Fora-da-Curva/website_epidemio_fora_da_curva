@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts | Kaique Alves</title>
+    <link>/post/</link>
+      <atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <description>Posts</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>pt</language><lastBuildDate>Tue, 17 Mar 2020 21:00:00 +0000</lastBuildDate>
+    <image>
+      <url>img/map[gravatar:%!s(bool=false) shape:circle]</url>
+      <title>Posts</title>
+      <link>/post/</link>
+    </image>
+    
+    <item>
+      <title>Carregar Dados no RStudio</title>
+      <link>/post/carregar_dados/carregar_dados/</link>
+      <pubDate>Tue, 17 Mar 2020 21:00:00 +0000</pubDate>
+      <guid>/post/carregar_dados/carregar_dados/</guid>
+      <description>
+
+
+&lt;p&gt;Se você veio até aqui, você deve estar curioso pra saber como carregar os dados no &lt;code&gt;R&lt;/code&gt; ou no &lt;code&gt;RStudio&lt;/code&gt; para poder iniciar sua análise de dados.&lt;/p&gt;
+&lt;p&gt;Não se preocupe! Neste post, eu irei demonstrar quatro maneiras simples que você pode utilizar para carregar dados de planilhas.&lt;/p&gt;
+&lt;div id=&#34;mãos-à-obra&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;strong&gt;Mãos à obra&lt;/strong&gt;&lt;/h1&gt;
+&lt;div id=&#34;arquivo-.txt&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;&lt;strong&gt;Arquivo .txt&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;Utilize a função &lt;code&gt;read.table()&lt;/code&gt;, a qual é uma função nativa do &lt;code&gt;R&lt;/code&gt; para carregar dados que foram organizados ou gerados em um arquivo de texto ou bloco de notas. Normalmente esse tipo de arquivo possui extensão &lt;code&gt;.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;data = read.table(file = &amp;quot;data.txt&amp;quot;, header = T)
+head(data)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   experimento tratamento tempo repeticao severidade
+## 1           1 testemunha     1         1       0.20
+## 2           1 testemunha     1         2       0.10
+## 3           1 testemunha     1         3       0.15
+## 4           1 testemunha     1         4       0.30
+## 5           1 testemunha     2         1       2.00
+## 6           1 testemunha     2         2       3.00&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Quando eu coloco &lt;code&gt;data = read...&lt;/code&gt; significa que eu estou atribuindo o banco de dados á um objeto &lt;code&gt;data.frame&lt;/code&gt;. Dessa forma você pode chamar esse objeto nas operações subsequentes.&lt;/p&gt;
+&lt;p&gt;A função &lt;code&gt;head()&lt;/code&gt; mostra as seis primeiras linhas do &lt;code&gt;data.frame&lt;/code&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;arquivos-ms-excel-.xlsx-e-.xls&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;&lt;strong&gt;Arquivos MS Excel (.xlsx e .xls)&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;Para carregar um arquivo Excel você primeiro precisa instalar o pacote &lt;code&gt;readxl&lt;/code&gt;. Basta você copiar e colar &lt;code&gt;install.packages(&#34;readxl&#34;)&lt;/code&gt; no seu console.&lt;/p&gt;
+&lt;p&gt;Utilizando a função &lt;code&gt;read_excel&lt;/code&gt; você pode carregar tanto arquivos &lt;code&gt;.xlsx&lt;/code&gt; quanto &lt;code&gt;.xls&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(readxl)
+
+data = read_excel(&amp;quot;data.xlsx&amp;quot;)
+head(data)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 6 x 5
+##   experimento tratamento tempo repeticao severidade
+##         &amp;lt;dbl&amp;gt; &amp;lt;chr&amp;gt;      &amp;lt;dbl&amp;gt;     &amp;lt;dbl&amp;gt; &amp;lt;chr&amp;gt;     
+## 1           1 testemunha     1         1 0.2       
+## 2           1 testemunha     1         2 0.1       
+## 3           1 testemunha     1         3 0.15      
+## 4           1 testemunha     1         4 0.3       
+## 5           1 testemunha     2         1 2.0       
+## 6           1 testemunha     2         2 3.0&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Para carregar uma planilha específica dentro do arquivo, basta adicionar o argumento &lt;code&gt;sheet =&lt;/code&gt; dentro da função, e após o sinal de igual digite o nome da planilha, por exemplo &lt;code&gt;read_excel(&#34;data.xlsx&#34;, sheet = &#34;experimento_1&#34;)&lt;/code&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;arquivo-csv&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;&lt;strong&gt;Arquivo CSV&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;Para carregar um arquivo &lt;code&gt;.csv&lt;/code&gt; você pode utilizar a função nativa &lt;code&gt;read.csv()&lt;/code&gt;. O argumento &lt;code&gt;sep = &#34;,&#34;&lt;/code&gt; indica que o tipo de separador de colunas no arquivo é a vírgula&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;data = read.csv(file = &amp;quot;data.csv&amp;quot;, sep = &amp;quot;,&amp;quot;)
+head(data)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   experimento tratamento tempo repeticao severidade
+## 1           1 testemunha     1         1       0.20
+## 2           1 testemunha     1         2       0.10
+## 3           1 testemunha     1         3       0.15
+## 4           1 testemunha     1         4       0.30
+## 5           1 testemunha     2         1       2.00
+## 6           1 testemunha     2         2       3.00&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;google-planilhas&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;&lt;strong&gt;Google planilhas&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;Particularmente, esse é meu método preferido de carregar os dados, justamente porque meus dados são todos armazenados em Google planilhas.&lt;/p&gt;
+&lt;p&gt;Primeiramente é necessário instalar o pacote &lt;code&gt;gsheet&lt;/code&gt;. Utilize o comando &lt;code&gt;install.packages(&#34;gsheet&#34;)&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;posteriormente, vá na sua planilha google, clique no botão &lt;strong&gt;Compartilhar&lt;/strong&gt; no canto superior direito. Clique em &lt;strong&gt;Receber link compartilhável&lt;/strong&gt;. Assim você vai gerar um link. Copie o link e inserira na função
+&lt;code&gt;gsheet2tbl()&lt;/code&gt;. Lembre-se de primento carregar o pacote &lt;code&gt;gsheet&lt;/code&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(gsheet)
+
+gsheet2tbl(&amp;quot;https://docs.google.com/spreadsheets/d/1sQPemg1lSYremWh4xe83YUDeDJiRh_M3WqqHiOnfVow/edit?usp=sharing&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## # A tibble: 48 x 5
+##    experimento tratamento tempo repeticao severidade
+##          &amp;lt;dbl&amp;gt; &amp;lt;chr&amp;gt;      &amp;lt;dbl&amp;gt;     &amp;lt;dbl&amp;gt;      &amp;lt;dbl&amp;gt;
+##  1           1 testemunha     1         1       0.2 
+##  2           1 testemunha     1         2       0.1 
+##  3           1 testemunha     1         3       0.15
+##  4           1 testemunha     1         4       0.3 
+##  5           1 testemunha     2         1       2   
+##  6           1 testemunha     2         2       3   
+##  7           1 testemunha     2         3       2.5 
+##  8           1 testemunha     2         4       3.2 
+##  9           1 testemunha     3         1      10   
+## 10           1 testemunha     3         2      10.2 
+## # ... with 38 more rows&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
