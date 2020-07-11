@@ -33,12 +33,17 @@
   </url>
   
   <url>
-    <loc>/post/carregar_dados/carregar_dados/</loc>
-    <lastmod>2020-03-17T21:00:00+00:00</lastmod>
+    <loc>/post/ec50/code_ec50/</loc>
+    <lastmod>2020-07-10T21:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>/post/</loc>
+    <lastmod>2020-07-10T21:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/carregar_dados/carregar_dados/</loc>
     <lastmod>2020-03-17T21:00:00+00:00</lastmod>
   </url>
   
@@ -174,10 +179,6 @@
   
   <url>
     <loc>/categories/</loc>
-  </url>
-  
-  <url>
-    <loc>/post/ec50/code_ec50/</loc>
   </url>
   
 </urlset>
