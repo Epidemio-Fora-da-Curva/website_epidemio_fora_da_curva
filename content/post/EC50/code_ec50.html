@@ -12,7 +12,7 @@ output: html_document
 <p>Na Fitopatologia, a <span class="math inline">\(EC_{50}\)</span> é muito utilizada para avaliar a sensibilidade de fungos a fungicidas. O aumento na <span class="math inline">\(EC_{50}\)</span> de alguns isolados pode indicar a seleção para populações menos sensíveis.</p>
 <div id="carregar-os-pacotes" class="section level1">
 <h1>Carregar os pacotes</h1>
-<p>Segue abaixo os pacotes que vamos utilizar. O pacote utilizado para estimar a <span class="math inline">\(EC_{50}\)</span> é o <code>drc</code>. Caso você não tenha ele instalado, basta você ir no seu Console, colar <code>instal.packages("drc")</code> e apertar enter que ele será instalado. Caso não tenha os outros pacotes, faça o mesmo para eles, apenas troque o nome dentro do parênteses.</p>
+<p>Segue abaixo os pacotes que vamos utilizar. O pacote utilizado para estimar a <span class="math inline">\(EC_{50}\)</span> é o <code>drc</code>. Caso você não tenha ele instalado, basta você ir no seu Console, colar <code>install.packages("drc")</code> e apertar enter que ele será instalado. Caso não tenha os outros pacotes, faça o mesmo para eles, apenas troque o nome dentro do parênteses.</p>
 <p>Após ter instalado todos esses pacotes, basta carrega-los da seguinte forma:</p>
 <pre class="r"><code>library(tidyverse)
 library(drc)
@@ -22,12 +22,12 @@ library(ggridges)</code></pre>
 <div id="dados" class="section level1">
 <h1>Dados</h1>
 <p>Primeiramente, precisamos criar um banco de dados para podermos estimar a <span class="math inline">\(EC_{50}\)</span> a partir deles. Para isso, vou utilizar um modelo base para o comportamento de resposta a doses de fungicidas (Noel et al. 2018). Caso você já possua um banco de dados, basta carregar utilizando a função para tal (Veja o <a href="https://alvesks.netlify.app/post/carregar_dados/carregar_dados/">post</a> sobre como carregar dados no R).</p>
-<p><span class="math display">\[ f(x) = \frac{c + (d-c)}{1+exp((b*log(x)-log(e)))}\]</span></p>
+<p><span class="math display">\[ f(x) = c +\frac{d-c}{1+exp(b(log(x)-log(e)))}\]</span></p>
 <p>Esse modelo é denominado de Log-logístico de quatro parâmetros <code>LL.4()</code>. Ele possui 4 parâmetros que são <code>b</code>, <code>c</code>, <code>d</code>, <code>e</code>. O parâmetro <code>b</code> é slope da curva no seu ponto de inflexão, <code>c</code> é a assíntota inferior da curva, <code>d</code> é o limite superior da curva, e <code>e</code> é a <span class="math inline">\(EC_{50}\)</span>. A variável <code>x</code> no modelo significa a dose ou concentração do fungicida. Sendo assim, para cada valor de dose, é possível calcular um valor de crescimento micelial, por exemplo.</p>
 <p>Portanto, eu peguei esse modelo e criei uma função para poder gerar valores de crescimento micelial.</p>
 <pre class="r"><code>grow = function(dose, b,c,d,e){
   x = dose
-  y = c + (d-c)/(1+exp((b*log(x)-log(e))))
+  y = c + (d-c)/(1+exp(b*(log(x)-log(e))))
   erro = (y * 0.02 * ( (d + 0.05 * d) - y ))
  
   
@@ -188,7 +188,7 @@ head(fungicida)</code></pre>
 ## 4       1 Organic Fungicide A 1e-03 15.8123455
 ## 5       1 Organic Fungicide A 1e-02  7.3206757
 ## 6       1 Organic Fungicide A 1e-01  0.6985264</code></pre>
-<p>Existe uma forma em que você pode indicar na função <code>drm()</code> que você tem mais de um isolado no seu banco de dados. O código ficaria algo como abaixo. No entanto, se você muitos isolados a função pode demorar muito para rodar (se rodar). Além disso, o output da função não é muito fácil de lidar caso você não tenha muita experiência em lidar com matrizes no R.</p>
+<p>Existe uma forma em que você pode indicar na função <code>drm()</code> que você tem mais de um isolado no seu banco de dados. O código ficaria algo como abaixo. No entanto, se você tem muitos isolados a função pode demorar muito para rodar (se rodar). Além disso, o output da função não é muito fácil de lidar caso você não tenha muita experiência em lidar com matrizes no R.</p>
 <pre class="r"><code># NÂO RODE ISSO
 model = drm(growth~dose, curveid = isolate,  fct = LL.4(), data = fungicida)
 ED(model, 50, interval = &quot;delta&quot;)</code></pre>
@@ -245,7 +245,7 @@ head(df_ec50)</code></pre>
   theme(legend.position = &quot;none&quot;)</code></pre>
 <pre><code>## Picking joint bandwidth of 0.0328</code></pre>
 <pre><code>## Picking joint bandwidth of 0.0285</code></pre>
-<p><img src="/post/EC50/code_ec50_files/figure-html/unnamed-chunk-18-1.png" width="384" /></p>
+<p><img src="/post/EC50/code_ec50_files/figure-html/unnamed-chunk-18-1.png" width="576" /></p>
 <pre class="r"><code>ggsave(&quot;plot3.png&quot;, height = 5,width = 4)</code></pre>
 <pre><code>## Picking joint bandwidth of 0.0328
 ## Picking joint bandwidth of 0.0285</code></pre>

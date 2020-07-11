@@ -89,7 +89,7 @@
 &lt;p&gt;Na Fitopatologia, a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; é muito utilizada para avaliar a sensibilidade de fungos a fungicidas. O aumento na &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; de alguns isolados pode indicar a seleção para populações menos sensíveis.&lt;/p&gt;
 &lt;div id=&#34;carregar-os-pacotes&#34; class=&#34;section level1&#34;&gt;
 &lt;h1&gt;Carregar os pacotes&lt;/h1&gt;
-&lt;p&gt;Segue abaixo os pacotes que vamos utilizar. O pacote utilizado para estimar a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; é o &lt;code&gt;drc&lt;/code&gt;. Caso você não tenha ele instalado, basta você ir no seu Console, colar &lt;code&gt;instal.packages(&#34;drc&#34;)&lt;/code&gt; e apertar enter que ele será instalado. Caso não tenha os outros pacotes, faça o mesmo para eles, apenas troque o nome dentro do parênteses.&lt;/p&gt;
+&lt;p&gt;Segue abaixo os pacotes que vamos utilizar. O pacote utilizado para estimar a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; é o &lt;code&gt;drc&lt;/code&gt;. Caso você não tenha ele instalado, basta você ir no seu Console, colar &lt;code&gt;install.packages(&#34;drc&#34;)&lt;/code&gt; e apertar enter que ele será instalado. Caso não tenha os outros pacotes, faça o mesmo para eles, apenas troque o nome dentro do parênteses.&lt;/p&gt;
 &lt;p&gt;Após ter instalado todos esses pacotes, basta carrega-los da seguinte forma:&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
 library(drc)
@@ -99,12 +99,12 @@ library(ggridges)&lt;/code&gt;&lt;/pre&gt;
 &lt;div id=&#34;dados&#34; class=&#34;section level1&#34;&gt;
 &lt;h1&gt;Dados&lt;/h1&gt;
 &lt;p&gt;Primeiramente, precisamos criar um banco de dados para podermos estimar a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; a partir deles. Para isso, vou utilizar um modelo base para o comportamento de resposta a doses de fungicidas (Noel et al. 2018). Caso você já possua um banco de dados, basta carregar utilizando a função para tal (Veja o &lt;a href=&#34;https://alvesks.netlify.app/post/carregar_dados/carregar_dados/&#34;&gt;post&lt;/a&gt; sobre como carregar dados no R).&lt;/p&gt;
-&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[ f(x) = \frac{c + (d-c)}{1+exp((b*log(x)-log(e)))}\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[ f(x) = c +\frac{d-c}{1+exp(b(log(x)-log(e)))}\]&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Esse modelo é denominado de Log-logístico de quatro parâmetros &lt;code&gt;LL.4()&lt;/code&gt;. Ele possui 4 parâmetros que são &lt;code&gt;b&lt;/code&gt;, &lt;code&gt;c&lt;/code&gt;, &lt;code&gt;d&lt;/code&gt;, &lt;code&gt;e&lt;/code&gt;. O parâmetro &lt;code&gt;b&lt;/code&gt; é slope da curva no seu ponto de inflexão, &lt;code&gt;c&lt;/code&gt; é a assíntota inferior da curva, &lt;code&gt;d&lt;/code&gt; é o limite superior da curva, e &lt;code&gt;e&lt;/code&gt; é a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt;. A variável &lt;code&gt;x&lt;/code&gt; no modelo significa a dose ou concentração do fungicida. Sendo assim, para cada valor de dose, é possível calcular um valor de crescimento micelial, por exemplo.&lt;/p&gt;
 &lt;p&gt;Portanto, eu peguei esse modelo e criei uma função para poder gerar valores de crescimento micelial.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;grow = function(dose, b,c,d,e){
   x = dose
-  y = c + (d-c)/(1+exp((b*log(x)-log(e))))
+  y = c + (d-c)/(1+exp(b*(log(x)-log(e))))
   erro = (y * 0.02 * ( (d + 0.05 * d) - y ))
  
   
@@ -265,7 +265,7 @@ head(fungicida)&lt;/code&gt;&lt;/pre&gt;
 ## 4       1 Organic Fungicide A 1e-03 15.8123455
 ## 5       1 Organic Fungicide A 1e-02  7.3206757
 ## 6       1 Organic Fungicide A 1e-01  0.6985264&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Existe uma forma em que você pode indicar na função &lt;code&gt;drm()&lt;/code&gt; que você tem mais de um isolado no seu banco de dados. O código ficaria algo como abaixo. No entanto, se você muitos isolados a função pode demorar muito para rodar (se rodar). Além disso, o output da função não é muito fácil de lidar caso você não tenha muita experiência em lidar com matrizes no R.&lt;/p&gt;
+&lt;p&gt;Existe uma forma em que você pode indicar na função &lt;code&gt;drm()&lt;/code&gt; que você tem mais de um isolado no seu banco de dados. O código ficaria algo como abaixo. No entanto, se você tem muitos isolados a função pode demorar muito para rodar (se rodar). Além disso, o output da função não é muito fácil de lidar caso você não tenha muita experiência em lidar com matrizes no R.&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# NÂO RODE ISSO
 model = drm(growth~dose, curveid = isolate,  fct = LL.4(), data = fungicida)
 ED(model, 50, interval = &amp;quot;delta&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
@@ -322,7 +322,7 @@ head(df_ec50)&lt;/code&gt;&lt;/pre&gt;
   theme(legend.position = &amp;quot;none&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Picking joint bandwidth of 0.0328&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Picking joint bandwidth of 0.0285&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;/post/EC50/code_ec50_files/figure-html/unnamed-chunk-18-1.png&#34; width=&#34;384&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/EC50/code_ec50_files/figure-html/unnamed-chunk-18-1.png&#34; width=&#34;576&#34; /&gt;&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggsave(&amp;quot;plot3.png&amp;quot;, height = 5,width = 4)&lt;/code&gt;&lt;/pre&gt;
 &lt;pre&gt;&lt;code&gt;## Picking joint bandwidth of 0.0328
 ## Picking joint bandwidth of 0.0285&lt;/code&gt;&lt;/pre&gt;

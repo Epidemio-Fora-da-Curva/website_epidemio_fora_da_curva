@@ -14,7 +14,7 @@ Na Fitopatologia, a $EC_{50}$ é muito utilizada para avaliar a sensibilidade de
 
 # Carregar os pacotes
 
-Segue abaixo os pacotes que vamos utilizar. O pacote utilizado para estimar a $EC_{50}$ é o `drc`. Caso você não tenha ele instalado, basta você ir no seu Console, colar `instal.packages("drc")` e apertar enter que ele será instalado. Caso não tenha os outros pacotes, faça o mesmo para eles, apenas troque o nome dentro do parênteses.
+Segue abaixo os pacotes que vamos utilizar. O pacote utilizado para estimar a $EC_{50}$ é o `drc`. Caso você não tenha ele instalado, basta você ir no seu Console, colar `install.packages("drc")` e apertar enter que ele será instalado. Caso não tenha os outros pacotes, faça o mesmo para eles, apenas troque o nome dentro do parênteses.
 
 Após ter instalado todos esses pacotes, basta carrega-los da seguinte forma:
 
@@ -32,7 +32,7 @@ Primeiramente, precisamos criar um banco de dados para podermos estimar a $EC_{5
 
 
 
- $$ f(x) = \frac{c + (d-c)}{1+exp((b*log(x)-log(e)))}$$
+ $$ f(x) = c +\frac{d-c}{1+exp(b(log(x)-log(e)))}$$
 
 Esse modelo é denominado de Log-logístico de quatro parâmetros `LL.4()`. Ele possui 4 parâmetros que são `b`, `c`, `d`, `e`. O parâmetro `b` é slope da curva no seu ponto de inflexão, `c` é a assíntota inferior da curva, `d` é o limite superior da curva, e `e` é a $EC_{50}$. A variável `x` no modelo significa a dose ou concentração do fungicida. Sendo assim, para cada valor de dose, é possível calcular um valor de crescimento micelial, por exemplo. 
 
@@ -41,7 +41,7 @@ Portanto, eu peguei esse modelo e criei uma função para poder gerar valores de
 ```{r}
 grow = function(dose, b,c,d,e){
   x = dose
-  y = c + (d-c)/(1+exp((b*log(x)-log(e))))
+  y = c + (d-c)/(1+exp(b*(log(x)-log(e))))
   erro = (y * 0.02 * ( (d + 0.05 * d) - y ))
  
   
@@ -189,7 +189,7 @@ fungicida = fungicida_A %>%
 head(fungicida)
 ```
 
-Existe uma forma em que você pode indicar na função `drm()` que você tem mais de um isolado no seu banco de dados. O código ficaria algo como abaixo. No entanto, se você muitos isolados a função pode demorar muito para rodar (se rodar). Além disso, o output da função não é muito fácil de lidar caso você não tenha muita experiência em lidar com matrizes no R.
+Existe uma forma em que você pode indicar na função `drm()` que você tem mais de um isolado no seu banco de dados. O código ficaria algo como abaixo. No entanto, se você tem muitos isolados a função pode demorar muito para rodar (se rodar). Além disso, o output da função não é muito fácil de lidar caso você não tenha muita experiência em lidar com matrizes no R.
 
 ```{r eval=FALSE, include=T}
 # NÂO RODE ISSO
@@ -361,7 +361,7 @@ ggsave("plot2.png", height =10, width = 5)
 ```
 Use o pacote `ggridges` para criar gráficos de densidade.
 
-```{r fig.height=5, fig.width=4}
+```{r fig.height=5, fig.width=6}
 df_ec50 %>% 
   ggplot(aes(Estimate, field, fill = stat(x)))+
   geom_density_ridges_gradient(alpha = 0.3)+
