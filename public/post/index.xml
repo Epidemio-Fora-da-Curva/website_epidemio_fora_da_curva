@@ -99,5 +99,263 @@ gsheet2tbl(&amp;quot;https://docs.google.com/spreadsheets/d/1sQPemg1lSYremWh4xe8
 </description>
     </item>
     
+    <item>
+      <title>Como estimar $EC_{50}$ de fungicidas usando o R</title>
+      <link>/post/ec50/code_ec50/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>/post/ec50/code_ec50/</guid>
+      <description>
+
+
+&lt;p&gt;Olá pessoal!&lt;/p&gt;
+&lt;p&gt;Nesse post eu vou mostrar como a gente faz pra estimar a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; de fungicidas utilizando o &lt;code&gt;R&lt;/code&gt;. Para aqueles que não sabem, a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; é a concentração na qual um composto inibe 50% do crescimento de um organismo quando comparado com a testemunha (não tratatado).&lt;/p&gt;
+&lt;p&gt;Na Fitopatologia, a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; é muito utilizada para avaliar a sensibilidade de fungos a fungicidas. O aumento na &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; de alguns isolados pode indicar a seleção para populações menos sensíveis.&lt;/p&gt;
+&lt;div id=&#34;carregar-os-pacotes&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Carregar os pacotes&lt;/h1&gt;
+&lt;p&gt;Segue abaixo os pacotes que vamos utilizar. O pacote utilizado para estimar a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; é o &lt;code&gt;drc&lt;/code&gt;. Caso você não tenha ele instalado, basta voce ir no seu Console, colar &lt;code&gt;instal.packages(&#34;drc&#34;)&lt;/code&gt; e apertar enter que ele será intalado. Caso não tenha os outros pacotes, faça o mesmo para eles, apenas troque o nome dentro do parênteses.&lt;/p&gt;
+&lt;p&gt;Após ter instalado todos esses pacotes, basta carrega-los da seguinte forma:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+library(drc)
+library(cowplot)
+library(ggridges)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;dados&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Dados&lt;/h1&gt;
+&lt;p&gt;Primeiramente, precisamos criar um banco de dados para podermos estimar a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; a partir deles. Para isso, vou utilizar um modelo base para o comportamento de resposta a doses de fungicidas (Noel et al. 2018). Caso voce já possua um banco de dados, basta carregar utilizando a função para tal (Veja o &lt;a href=&#34;https://alvesks.netlify.app/post/carregar_dados/carregar_dados/&#34;&gt;post&lt;/a&gt; sobre como carregar dados no R).&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[ f(x) = \frac{c + (d-c)}{1+exp((b*log(x)-log(e)))}\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Essse modelo é denominado de Log-logistico de quatro parâmetros &lt;code&gt;LL.4()&lt;/code&gt;. Ele possui 4 parâmetros que são &lt;code&gt;b&lt;/code&gt;, &lt;code&gt;c&lt;/code&gt;, &lt;code&gt;d&lt;/code&gt;, &lt;code&gt;e&lt;/code&gt;. O parâmetro &lt;code&gt;b&lt;/code&gt; é slope da curva no seu ponto de inflexão, &lt;code&gt;c&lt;/code&gt; é a assintota inferior da curva, &lt;code&gt;d&lt;/code&gt; é o limite superior da curva, e &lt;code&gt;e&lt;/code&gt; é a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt;. A variável &lt;code&gt;x&lt;/code&gt; no modelo significa a dose ou concentração do fungicida. Sendo assim, para cada valor de dose, é possivel calcular um valor de crescimento micelial, por exemplo.&lt;/p&gt;
+&lt;p&gt;Sendo assim, eu peguei esse modelo e criei uma função para poder gerar valores de crescimento micelial.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;grow = function(dose, b,c,d,e){
+  x = dose
+  y = c + (d-c)/(1+exp((b*log(x)-log(e))))
+  erro = (y * 0.02 * ( (d + 0.05 * d) - y ))
+ 
+  
+  growth = rnorm(length(x),y, erro)
+  return(growth)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Abaixo eu mostro um exemplo da utilização da função. Eu crio um vetor de doses no qual eu denominei de &lt;code&gt;doses&lt;/code&gt;. Insiro o vetor da função que criei acima junto com alguns valores que atribui arbitrariamente para os parâmetros.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#criar vetor de dose
+doses = rep(c(0, 1e-6,1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1),5)
+set.seed(1) # Isso aqui faz que os valores simualados sejam sempre os mesmos.
+
+#simular crescimento micelial
+growth = grow(doses, b = 1, c = 0, d = 20, e = 0.001)
+
+df1 = data.frame(doses,growth)
+head(df1)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   doses    growth
+## 1 0e+00 19.749418
+## 2 1e-06 20.054870
+## 3 1e-05 19.405505
+## 4 1e-04 19.816651
+## 5 1e-03 10.724917
+## 6 1e-02  1.245888&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Depois disso eu gero um gráfico com os valores simulados.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df1 %&amp;gt;% 
+  ggplot()+
+  geom_jitter(aes(factor(doses),growth, color = growth),
+              width = 0.05,
+              size = 3.5, 
+              # color= &amp;quot;steelblue&amp;quot;,
+              alpha = 1)+
+  geom_boxplot(aes(factor(doses),growth), fill = NA, size = .7)+
+  scale_color_viridis_c(option = &amp;quot;D&amp;quot;,direction = 1)+
+  labs(x =&amp;quot;Doses&amp;quot;, y = &amp;quot;Crescimento Micelial&amp;quot;)+
+  theme_minimal_hgrid(font_size = 10)+
+  theme(legend.position = &amp;quot;none&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/EC50/code_ec50_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#salvar o gráfico
+ggsave(&amp;quot;plot.png&amp;quot;, height = 3,width = 4)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;estimando-a-ec_50-para-um-isolado&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Estimando a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; para um isolado&lt;/h1&gt;
+&lt;p&gt;Para estimar a EC50 dos dados antes devemos ajutar o modelo que se ajusta aos dados. Para isso vamos usar a função &lt;code&gt;drm()&lt;/code&gt; do pacote &lt;code&gt;drc&lt;/code&gt;. Nessa função precisamos fornecer a formula, que é uma descição simbólica da equação, que basicamente vai indicar quem é sua coluna de doses e quem é sua coluna de crescimento micelial. No nosso caso a formula será &lt;code&gt;growth~dose&lt;/code&gt;. Também precisamos indicar qual é o data.frame no argumento &lt;code&gt;data&lt;/code&gt;, no nosso caso &lt;code&gt;data = df1&lt;/code&gt;. O argumento &lt;code&gt;fct&lt;/code&gt; é onde você indica qual modelo será utilizado. No nosso caso, vamos utilizar o &lt;code&gt;LL.4()&lt;/code&gt;. Para saber quais modelos estão disponiveis use a função &lt;code&gt;getMeanFunctions()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;veja a implementação do modelo. Aqui usamos a função summary para ver as estimativas dos parêmetros e suas estatisticas.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;model1 = drm(formula = growth~doses,  data = df1, fct = LL.4())
+summary(model1)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Model fitted: Log-logistic (ED50 as parameter) (4 parms)
+## 
+## Parameter estimates:
+## 
+##                  Estimate  Std. Error  t-value   p-value    
+## b:(Intercept)  1.0447e+00  7.9231e-02  13.1857 2.415e-15 ***
+## c:(Intercept) -1.7187e-02  2.3108e-01  -0.0744    0.9411    
+## d:(Intercept)  2.0030e+01  1.8943e-01 105.7401 &amp;lt; 2.2e-16 ***
+## e:(Intercept)  9.7556e-04  6.5352e-05  14.9277 &amp;lt; 2.2e-16 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error:
+## 
+##  0.7130597 (36 degrees of freedom)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Veja o gráfico do ajuste&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;plot(model1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/EC50/code_ec50_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Para obter o valor de &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; vamos usar a função &lt;code&gt;ED&lt;/code&gt;. Nela você precisa indicar o modelo ajustado &lt;code&gt;model1&lt;/code&gt;. No argumento &lt;code&gt;respLev&lt;/code&gt; é onde você indica qual o valor de EC que quer estimar, no caso de 50%, &lt;code&gt;respLev=50&lt;/code&gt;. Além disso voce indica se quer que seja estimado os intervalos de confiança em &lt;code&gt;interval&lt;/code&gt; onde você insere qual tipo de intervalo você quer. Para o modelo &lt;code&gt;LL.4()&lt;/code&gt; usando &lt;code&gt;interval= &#34;delta&#34;&lt;/code&gt;.(Nota: Para mais informações sobre intervalos de confiança use &lt;code&gt;?ED&lt;/code&gt;).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ED(model1, respLev=50, interval = &amp;quot;delta&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Estimated effective doses
+## 
+##          Estimate Std. Error      Lower      Upper
+## e:1:50 9.7556e-04 6.5352e-05 8.4302e-04 1.1081e-03&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;estimando-a-ec_50-para-mais-de-um-isolado&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Estimando a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; para MAIS DE UM isolado&lt;/h1&gt;
+&lt;p&gt;Ótimo, conseguimos estimar a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; para um isolado. No entado, muitas vezes vamos precisar estimar para varios isolados. Sendo assim, agora vamos ver como a gente faz para estimar a &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt; para uma situação onde temos 100 isolados.&lt;/p&gt;
+&lt;p&gt;PAra isso, vou criar um scenario no qual eu tenho 100 isolados de um fungo hipotético
+onde metade deles foi coletado em uma lavoura organica e a outra metade em uma lavoura convencional. Esses isolados foram submetidos a dois fungicidas diferentes, os quais denominei de &lt;code&gt;Fungicida A&lt;/code&gt; e &lt;code&gt;Fungicida B&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Agora vamos criar um dada.frame para um fungica A e um para o fungicida B.&lt;/p&gt;
+&lt;div id=&#34;fungicida-a&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Fungicida A&lt;/h2&gt;
+&lt;p&gt;Para o &lt;code&gt;fungicida A&lt;/code&gt; eu considerei que os isolados do cultivo convencional seriam menos sensiveis a ele.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;set.seed(1)
+n_isolates = 50
+
+nrep = 5
+n_dose =7
+n_field = 2
+n = n_isolates*nrep*n_dose*n_field
+field = c(rep(&amp;quot;Organic&amp;quot;,nrep*n_dose), rep(&amp;quot;Conventional&amp;quot;,nrep*n_dose))
+# isolate = sort(rep(c(&amp;quot;a&amp;quot;,&amp;quot;b&amp;quot;),nrep*n_dose))
+isolate = sort(rep(1:((n_isolates*2)),nrep*n_dose))
+doses = (rep(c(0,1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1),nrep*n_field))
+EC50 = c(5e-3, 1e-1)
+
+
+fungicida_A = data.frame(isolate,
+           field = rep(field,n_isolates),
+           fungicida = &amp;quot;Fungicide A&amp;quot;,
+           dose = rep(doses,n_isolates)) %&amp;gt;% 
+  mutate(efeito = case_when(
+    field == &amp;quot;Conventional&amp;quot; ~ rnorm(n,EC50[2],0.0001),
+    field == &amp;quot;Organic&amp;quot; ~ rnorm(n,EC50[1],0.0001))) %&amp;gt;% 
+  mutate(growth = grow(dose, b = 1, c = 0, d = 20, e = efeito))%&amp;gt;% 
+  dplyr::select(-efeito)
+
+head(fungicida_A)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   isolate   field   fungicida  dose     growth
+## 1       1 Organic Fungicide A 0e+00 19.4698329
+## 2       1 Organic Fungicide A 1e-05 20.3554736
+## 3       1 Organic Fungicide A 1e-04 20.0740230
+## 4       1 Organic Fungicide A 1e-03 18.1751833
+## 5       1 Organic Fungicide A 1e-02  6.0228971
+## 6       1 Organic Fungicide A 1e-01  0.8902468&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;fungicida-b&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Fungicida B&lt;/h2&gt;
+&lt;p&gt;Já Para o &lt;code&gt;fungicida B&lt;/code&gt; eu considerei que os isolados teriam o mesmo padrão de sensibilidade, ou seja, não existe diferença entre as &lt;span class=&#34;math inline&#34;&gt;\(EC_{50}\)&lt;/span&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;set.seed(1)
+n_isolates = 50
+nrep = 5
+n_dose =7
+n_field = 2
+n = n_isolates*nrep*n_dose*n_field
+field = c(rep(&amp;quot;Organic&amp;quot;,nrep*n_dose), rep(&amp;quot;Conventional&amp;quot;,nrep*n_dose))
+# isolate = sort(rep(c(&amp;quot;a&amp;quot;,&amp;quot;b&amp;quot;),nrep*n_dose))
+isolate = sort(rep(1:((n_isolates*2)),nrep*n_dose))
+doses = (rep(c(0,1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1),nrep*n_field))
+EC50 = c(5e-3, 5e-3)
+
+
+fungicida_B = data.frame(isolate,
+                        field = rep(field,n_isolates),
+                        fungicida = &amp;quot;Fungicide B&amp;quot;,
+                        dose = rep(doses,n_isolates)) %&amp;gt;% 
+  mutate(efeito = case_when(
+    field == &amp;quot;Conventional&amp;quot; ~ rnorm(n,EC50[2],0.0001),
+    field == &amp;quot;Organic&amp;quot; ~ rnorm(n,EC50[1],0.0001))) %&amp;gt;% 
+  mutate(growth = grow(dose, b = 1, c = 0, d = 20, e = efeito)) %&amp;gt;% 
+  dplyr::select(-efeito)
+
+head(fungicida_B)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   isolate   field   fungicida  dose     growth
+## 1       1 Organic Fungicide B 0e+00 19.4698329
+## 2       1 Organic Fungicide B 1e-05 20.3554736
+## 3       1 Organic Fungicide B 1e-04 20.0740230
+## 4       1 Organic Fungicide B 1e-03 18.1751833
+## 5       1 Organic Fungicide B 1e-02  6.0228971
+## 6       1 Organic Fungicide B 1e-01  0.8902468&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Aqui eu uso a função &lt;code&gt;bind_rows&lt;/code&gt; para juntar os dois &lt;code&gt;data.frames&lt;/code&gt; criados acima e crio um novo data.frame chamado apenas de &lt;code&gt;fungicida&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;fungicida = fungicida_A %&amp;gt;% 
+  bind_rows(fungicida_B)
+head(fungicida)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   isolate   field   fungicida  dose     growth
+## 1       1 Organic Fungicide A 0e+00 19.4698329
+## 2       1 Organic Fungicide A 1e-05 20.3554736
+## 3       1 Organic Fungicide A 1e-04 20.0740230
+## 4       1 Organic Fungicide A 1e-03 18.1751833
+## 5       1 Organic Fungicide A 1e-02  6.0228971
+## 6       1 Organic Fungicide A 1e-01  0.8902468&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Existe uma forma em que você pode indicar na função &lt;code&gt;drm()&lt;/code&gt; que você tem mais de um isolado no seu banco de dados. O código ficaria algo como abaixo. No entando, se você muitos isolados a função pode demorar muito para rodar (se rodar). Além disso, o output da função não é muito fácil de lidar caso você não tenha muita experiencia em lidar com matrizes no R.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# NÂO RODE ISSO
+model = drm(growth~dose, curveid = isolate,  fct = LL.4(), data = fungicida)
+ED(model, 50, interval = &amp;quot;delta&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Sendo assim, eu criei um pacote para facilitar nossa vida.&lt;/p&gt;
+&lt;p&gt;O nome do pacote é &lt;code&gt;ec50estimator&lt;/code&gt;. Para instalar esse pacote você vai precisar, primeiramente instalar o pacote &lt;code&gt;devtools&lt;/code&gt;. Para isso, rode no seu Console o seguinte comando &lt;code&gt;install.packages(&#34;devtools&#34;)&lt;/code&gt;. Após instalar esse pacote, instale o &lt;code&gt;ec50estimator&lt;/code&gt; usando o seguinte comando:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;devtools::install_github(&amp;quot;AlvesKS/ec50estimator&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;O processo de instalação pode sugerir a atualização/instalação de alguns pacote, portanto recomendo que faça a instalação desses outros pacotes.&lt;/p&gt;
+&lt;p&gt;Assim que instalar o pacote. O proximo passo é carrega-lo no seu script.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(ec50estimator)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;A função &lt;code&gt;estimate_EC50()&lt;/code&gt; é usada para calcular as EC50 para cada isolado dentro de cada sistema de cultivo e para cada fungicida. Assim como na função &lt;code&gt;drm()&lt;/code&gt;, na &lt;code&gt;estimate_EC50()&lt;/code&gt; você também precisa fornecer a &lt;code&gt;formula&lt;/code&gt;. Forneça também no argumento &lt;code&gt;data&lt;/code&gt; o &lt;code&gt;data.frame&lt;/code&gt; onde estão seus dados. Indique a coluna que identifica cada isolado no argumento &lt;code&gt;isolate_col&lt;/code&gt;. Se seus dados são estratificados (por região, sistema de cultivo ou ano, por exemplo) indique as colunas no argumento &lt;code&gt;strata_col&lt;/code&gt;. Indique o modelo será utilizado no argumento &lt;code&gt;fct&lt;/code&gt; (mesmos do pacote &lt;code&gt;drc&lt;/code&gt;). Se você quer que os intervalos de confiança sejam estimados, indique no argumento &lt;code&gt;interval&lt;/code&gt; (funciona da mesma forma que funciona na função &lt;code&gt;drm()&lt;/code&gt;).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df_ec50 = estimate_EC50(growth~dose,
+                        data =fungicida,
+                        isolate_col = &amp;quot;isolate&amp;quot;, 
+                        strata_col =  c(&amp;quot;field&amp;quot;,&amp;quot;fungicida&amp;quot;),
+                        interval = &amp;quot;delta&amp;quot;,
+                        fct = LL.3())
+head(df_ec50)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   ID   field   fungicida    Estimate   Std..Error       Lower       Upper
+## 1  1 Organic Fungicide A 0.006191059 0.0005457851 0.005079331 0.007302787
+## 2  3 Organic Fungicide A 0.004199895 0.0002996292 0.003589570 0.004810220
+## 3  5 Organic Fungicide A 0.005737065 0.0003955529 0.004931350 0.006542780
+## 4  7 Organic Fungicide A 0.004325696 0.0004515921 0.003405833 0.005245559
+## 5  9 Organic Fungicide A 0.003695793 0.0003204987 0.003042958 0.004348627
+## 6 11 Organic Fungicide A 0.004086010 0.0003446760 0.003383928 0.004788092&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ATENÇÃO: Neste post, eu usei o mesmo modelo (&lt;code&gt;LL.4()&lt;/code&gt;) para os dois fungicidas (A e B). No entanto, é importante verificar qual modelo é mais apropriado para seus dados. Para isso, antes de rodar a função &lt;code&gt;estimate_EC50()&lt;/code&gt; para todos seus dados, use a função &lt;code&gt;drm()&lt;/code&gt; para ajustar um modelo para alguns isolados e posteriormente utilize a função &lt;code&gt;mselect()&lt;/code&gt; para calcular as estatísticas que vão te auxiliar a selecionar o melhor modelo. Dica: quanto menor o valor de AIC, melhor o modelo. Mais informações rode o comando &lt;code&gt;?mselect&lt;/code&gt; no seu Console.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;gráficos&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Gráficos&lt;/h2&gt;
+&lt;p&gt;Veja as estimativas de EC50 e intervalos de confiança para todos os isolados.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df_ec50 %&amp;gt;% 
+  ggplot(aes(as.numeric(ID),Estimate, color = field))+
+  geom_point(size = 2)+
+  geom_errorbar(aes(ymin=Lower,ymax = Upper), width=0)+
+  facet_wrap(~fungicida, scales = &amp;quot;free_y&amp;quot;,nrow = 2)+
+  scale_y_log10()+
+  scale_x_continuous(breaks = 1:100)+
+  scale_color_manual(values = c(&amp;quot;darkred&amp;quot;, &amp;quot;steelblue&amp;quot;))+
+  labs(x = &amp;quot;Isolates&amp;quot;, y = &amp;quot;EC50&amp;quot;)+
+  theme_minimal_hgrid(font_size = 10)+
+  theme(axis.text.x = element_text(size=3),
+        legend.position = &amp;quot;bottom&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/EC50/code_ec50_files/figure-html/unnamed-chunk-17-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggsave(&amp;quot;plot2.png&amp;quot;, height =5, width = 4)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Use o pacote &lt;code&gt;ggridges&lt;/code&gt; para criar gráficos de densidade.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;df_ec50 %&amp;gt;% 
+  ggplot(aes(Estimate, field, fill = stat(x)))+
+  geom_density_ridges_gradient(alpha = 0.3)+
+  scale_x_log10()+
+  scale_fill_viridis_c(option = &amp;quot;C&amp;quot;)+
+  facet_wrap(~fungicida, nrow = 2)+
+  theme_minimal_hgrid()+
+  labs(x = &amp;quot;EC50&amp;quot;, y = &amp;quot;Field&amp;quot;)+
+  theme(legend.position = &amp;quot;none&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Picking joint bandwidth of 0.0264&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Picking joint bandwidth of 0.0237&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/post/EC50/code_ec50_files/figure-html/unnamed-chunk-18-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggsave(&amp;quot;plot3.png&amp;quot;, height = 5,width = 4)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Picking joint bandwidth of 0.0264
+## Picking joint bandwidth of 0.0237&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;references&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;References&lt;/h1&gt;
+&lt;p&gt;Noel, Z. A., Wang, J., and Chilvers, M. I. 2018. Significant Influence of EC 50 Estimation by Model Choice and EC 50 Type. Plant Disease. 102:708–714.&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
   </channel>
 </rss>

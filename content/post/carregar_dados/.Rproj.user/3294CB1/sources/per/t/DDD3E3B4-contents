@@ -1,0 +1,42 @@
+---
+title: "Como carregar meus dados no RStudio"
+author: "kaique alves"
+date: "17/03/2020"
+output: html_document
+---
+
+
+# Carregar a partir de aquivo .txt
+```{r}
+read.table(file = "data.txt", header = T)
+```
+
+
+
+# Carregar a partir de arquivo Excel .xlsx (ou .xls)
+```{r}
+library(readxl)
+
+read_excel("data.xlsx")
+```
+
+
+
+# Carregar a partir de arquivo .csv
+```{r}
+read.csv(file = "data.csv", sep = ",")
+```
+
+
+
+# Carregar a partir de Google planilhas
+```{r}
+library(gsheet)
+
+
+gsheet2tbl("")
+
+
+```
+
+

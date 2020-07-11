@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1583506990000.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2413153751",
+    "id" : "9A977151",
+    "lastKnownWriteTime" : 1583507132,
+    "last_content_update" : 1583507132327,
+    "path" : "C:/Users/Epidemio-PC/Google Drive/Website/website_efc/themes/hugo-academic/data/themes/minimal.toml",
+    "project_path" : "themes/hugo-academic/data/themes/minimal.toml",
+    "properties" : {
+        "cursorPosition" : "4,12",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "toml"
+}
