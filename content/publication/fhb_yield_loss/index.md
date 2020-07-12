@@ -18,7 +18,7 @@ links:
   url: https://apsjournals.apsnet.org/doi/10.1094/PHYTO-04-19-0122-R
 projects: ''
 publication: In *Phytoathology*
-publication_short: In *Phytoathology 110:2*, 370-378
+publication_short: In *Phytopathology 110:2*, 370-378
 publication_types:
 - "2"
 publishDate: "2020-03-01T00:00:00Z"
